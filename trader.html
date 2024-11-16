@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexTrade - Trading Platform</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+
+        :root {
+            --primary-color: #2962ff;
+            --secondary-color: #1e88e5;
+            --background-dark: #1a1a1a;
+            --text-light: #ffffff;
+            --text-gray: #888888;
+        }
+
+        body {
+            background-color: var(--background-dark);
+            color: var(--text-light);
+        }
+
+        .navbar {
+            background-color: #000000;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            color: var(--primary-color);
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .nav-links a {
+            color: var(--text-light);
+            text-decoration: none;
+            margin-left: 2rem;
+        }
+
+        .main-container {
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+        }
+
+        .chart-container {
+            background-color: #242424;
+            padding: 1rem;
+            border-radius: 8px;
+            height: 400px;
+        }
+
+        .trading-panel {
+            background-color: #242424;
+            padding: 1rem;
+            border-radius: 8px;
+        }
+
+        .market-data {
+            margin-top: 2rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+
+        .market-card {
+            background-color: #242424;
+            padding: 1rem;
+            border-radius: 8px;
+        }
+
+        .price {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .trading-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        input, select {
+            padding: 0.5rem;
+            background-color: #333;
+            border: 1px solid #444;
+            color: var(--text-light);
+            border-radius: 4px;
+        }
+
+        button {
+            padding: 0.5rem 1rem;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: var(--secondary-color);
+        }
+
+        .positive {
+            color: #4caf50;
+        }
+
+        .negative {
+            color: #f44336;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background-color: #242424;
+            margin: 15% auto;
+            padding: 20px;
+            width: 400px;
+            border-radius: 8px;
+        }
+
+        .auth-container {
+            padding: 20px;
+        }
+
+        .auth-tabs {
+            display: flex;
+            margin-bottom: 20px;
+        }
+
+        .auth-tab {
+            flex: 1;
+            padding: 10px;
+            background: none;
+            border: none;
+            color: var(--text-light);
+            cursor: pointer;
+        }
+
+        .auth-tab.active {
+            border-bottom: 2px solid var(--primary-color);
+        }
+
+        .auth-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .section {
+            padding: 2rem;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .dashboard-card {
+            background-color: #242424;
+            padding: 1.5rem;
+            border-radius: 8px;
+        }
+
+        .markets-table, .portfolio-assets {
+            background-color: #242424;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #333;
+        }
+
+        .settings-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .settings-group {
+            background-color: #242424;
+            padding: 1.5rem;
+            border-radius: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .preference-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+            border-bottom: 1px solid #333;
+        }
+
+        .auth-btn {
+            margin-left: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .settings-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="authModal" class="modal">
+        <div class="modal-content">
+            <div class="auth-container">
+                <div class="auth-tabs">
+                    <button class="auth-tab active" onclick="switchTab('signin')">Sign In</button>
+                    <button class="auth-tab" onclick="switchTab('signup')">Sign Up</button>
+                </div>
+                
+                <form id="signinForm" class="auth-form">
+                    <input type="email" placeholder="Email" required>
+                    <input type="password" placeholder="Password" required>
+                    <button type="submit">Sign In</button>
+                </form>
+
+                <form id="signupForm" class="auth-form" style="display: none;">
+                    <input type="text" placeholder="Full Name" required>
+                    <input type="email" placeholder="Email" required>
+                    <input type="password" placeholder="Password" required>
+                    <input type="password" placeholder="Confirm Password" required>
+                    <button type="submit">Sign Up</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <nav class="navbar">
+        <div class="logo">NexTrade</div>
+        <div class="nav-links">
+            <a href="#dashboard" onclick="showSection('dashboard')">Dashboard</a>
+            <a href="#markets" onclick="showSection('markets')">Markets</a>
+            <a href="#portfolio" onclick="showSection('portfolio')">Portfolio</a>
+            <a href="#settings" onclick="showSection('settings')">Settings</a>
+            <button id="authButton" onclick="openAuthModal()" class="auth-btn">Sign In</button>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <div class="left-panel">
+            <div class="chart-container">
+                <canvas id="tradingChart"></canvas>
+            </div>
+            <div class="market-data">
+                <div class="market-card">
+                    <h3>BTC/USD</h3>
+                    <div class="price">$45,123.45</div>
+                    <div class="change positive">+2.5%</div>
+                </div>
+                <div class="market-card">
+                    <h3>ETH/USD</h3>
+                    <div class="price">$3,123.45</div>
+                    <div class="change negative">-1.2%</div>
+                </div>
+                <div class="market-card">
+                    <h3>XRP/USD</h3>
+                    <div class="price">$0.8945</div>
+                    <div class="change positive">+3.7%</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="trading-panel">
+            <h2>Place Trade</h2>
+            <form class="trading-form">
+                <select id="tradingPair">
+                    <option value="BTC/USD">BTC/USD</option>
+                    <option value="ETH/USD">ETH/USD</option>
+                    <option value="XRP/USD">XRP/USD</option>
+                </select>
+                <input type="number" placeholder="Amount" step="0.0001">
+                <select id="orderType">
+                    <option value="market">Market Order</option>
+                    <option value="limit">Limit Order</option>
+                </select>
+                <input type="number" placeholder="Price (for limit orders)" step="0.01">
+                <div>
+                    <button type="button" onclick="placeBuyOrder()">Buy</button>
+                    <button type="button" onclick="placeSellOrder()" style="background-color: #f44336;">Sell</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="dashboard" class="section">
+        <h2>Dashboard</h2>
+        <div class="dashboard-grid">
+            <div class="dashboard-card">
+                <h3>Portfolio Value</h3>
+                <div class="value">$124,567.89</div>
+                <div class="change positive">+5.2% (24h)</div>
+            </div>
+            <div class="dashboard-card">
+                <h3>Total Profit/Loss</h3>
+                <div class="value">$12,345.67</div>
+                <div class="change positive">+12.5%</div>
+            </div>
+            <div class="dashboard-card">
+                <h3>Active Orders</h3>
+                <div class="value">5</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="markets" class="section" style="display: none;">
+        <h2>Markets</h2>
+        <div class="markets-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Pair</th>
+                        <th>Price</th>
+                        <th>24h Change</th>
+                        <th>24h Volume</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="marketsTableBody">
+                    <!-- Will be populated by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="portfolio" class="section" style="display: none;">
+        <h2>Portfolio</h2>
+        <div class="portfolio-assets">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Asset</th>
+                        <th>Amount</th>
+                        <th>Value</th>
+                        <th>Profit/Loss</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="portfolioTableBody">
+                    <!-- Will be populated by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="settings" class="section" style="display: none;">
+        <h2>Settings</h2>
+        <div class="settings-container">
+            <div class="settings-group">
+                <h3>Profile Settings</h3>
+                <form id="profileSettings">
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" value="John Doe">
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" value="john@example.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Time Zone</label>
+                        <select>
+                            <option>UTC-05:00 (EST)</option>
+                            <option>UTC+00:00 (GMT)</option>
+                            <option>UTC+01:00 (CET)</option>
+                        </select>
+                    </div>
+                    <button type="submit">Save Changes</button>
+                </form>
+            </div>
+            
+            <div class="settings-group">
+                <h3>Preferences</h3>
+                <div class="preference-item">
+                    <label>Dark Mode</label>
+                    <input type="checkbox" checked>
+                </div>
+                <div class="preference-item">
+                    <label>Email Notifications</label>
+                    <input type="checkbox" checked>
+                </div>
+                <div class="preference-item">
+                    <label>Two-Factor Authentication</label>
+                    <input type="checkbox">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Initialize trading chart
+        const ctx = document.getElementById('tradingChart').getContext('2d');
+        const chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: Array.from({length: 20}, (_, i) => i + 1),
+                datasets: [{
+                    label: 'BTC/USD Price',
+                    data: Array.from({length: 20}, () => Math.random() * 1000 + 44000),
+                    borderColor: '#2962ff',
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: '#ffffff'
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        grid: {
+                            color: '#333'
+                        },
+                        ticks: {
+                            color: '#ffffff'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            color: '#333'
+                        },
+                        ticks: {
+                            color: '#ffffff'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Trading functions
+        function placeBuyOrder() {
+            const pair = document.getElementById('tradingPair').value;
+            alert(`Buy order placed for ${pair}`);
+        }
+
+        function placeSellOrder() {
+            const pair = document.getElementById('tradingPair').value;
+            alert(`Sell order placed for ${pair}`);
+        }
+
+        // Update prices periodically
+        setInterval(() => {
+            const prices = document.querySelectorAll('.price');
+            prices.forEach(price => {
+                const currentPrice = parseFloat(price.textContent.replace('$', ''));
+                const change = (Math.random() - 0.5) * 100;
+                const newPrice = (currentPrice + change).toFixed(2);
+                price.textContent = `$${newPrice}`;
+                
+                const changeElement = price.nextElementSibling;
+                const changePercent = (change / currentPrice * 100).toFixed(1);
+                changeElement.textContent = `${changePercent > 0 ? '+' : ''}${changePercent}%`;
+                changeElement.className = `change ${changePercent > 0 ? 'positive' : 'negative'}`;
+            });
+        }, 5000);
+
+        // Authentication Modal Functions
+        function openAuthModal() {
+            document.getElementById('authModal').style.display = 'block';
+        }
+
+        function switchTab(tab) {
+            document.getElementById('signinForm').style.display = tab === 'signin' ? 'flex' : 'none';
+            document.getElementById('signupForm').style.display = tab === 'signup' ? 'flex' : 'none';
+            
+            const tabs = document.querySelectorAll('.auth-tab');
+            tabs.forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        // Section Navigation
+        function showSection(sectionId) {
+            const sections = document.querySelectorAll('.section');
+            sections.forEach(section => {
+                section.style.display = 'none';
+            });
+            document.getElementById(sectionId).style.display = 'block';
+        }
+
+        // Initialize Markets Table
+        function initializeMarketsTable() {
+            const markets = [
+                { pair: 'BTC/USD', price: 45123.45, change: 2.5, volume: '1.2B' },
+                { pair: 'ETH/USD', price: 3123.45, change: -1.2, volume: '800M' },
+                { pair: 'XRP/USD', price: 0.8945, change: 3.7, volume: '200M' }
+            ];
+
+            const tbody = document.getElementById('marketsTableBody');
+            markets.forEach(market => {
+                const row = `
+                    <tr>
+                        <td>${market.pair}</td>
+                        <td>$${market.price}</td>
+                        <td class="${market.change > 0 ? 'positive' : 'negative'}">${market.change}%</td>
+                        <td>$${market.volume}</td>
+                        <td>
+                            <button onclick="showTradeModal('${market.pair}')">Trade</button>
+                        </td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+        }
+
+        // Initialize Portfolio Table
+        function initializePortfolioTable() {
+            const assets = [
+                { asset: 'Bitcoin', amount: 2.5, value: 112808.63, profit: 15.4 },
+                { asset: 'Ethereum', amount: 15.3, value: 47788.79, profit: -5.2 },
+                { asset: 'XRP', amount: 10000, value: 8945.00, profit: 23.7 }
+            ];
+
+            const tbody = document.getElementById('portfolioTableBody');
+            assets.forEach(asset => {
+                const row = `
+                    <tr>
+                        <td>${asset.asset}</td>
+                        <td>${asset.amount}</td>
+                        <td>$${asset.value}</td>
+                        <td class="${asset.profit > 0 ? 'positive' : 'negative'}">${asset.profit}%</td>
+                        <td>
+                            <button onclick="showTradeModal('${asset.asset}')">Trade</button>
+                        </td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+        }
+
+        // Initialize tables when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeMarketsTable();
+            initializePortfolioTable();
+            showSection('dashboard'); // Show dashboard by default
+        });
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            if (event.target == document.getElementById('authModal')) {
+                document.getElementById('authModal').style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
